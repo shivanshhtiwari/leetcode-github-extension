@@ -16,37 +16,27 @@
     <div class="config-section">
       <h2>GitHub Configuration</h2>
       
-      <div id="manualConfig">
-        <div class="form-group">
-          <label for="githubToken">GitHub Personal Access Token</label>
-          <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-          <small>Requires repo scope permissions</small>
-        </div>
-        <div class="form-group">
-          <label for="githubUsername">GitHub Username</label>
-          <input type="text" id="githubUsername" placeholder="your-username">
-        </div>
-        <div class="form-group">
-          <label for="repoName">Repository Name</label>
-          <input type="text" id="repoName" placeholder="leetcode-solutions">
-        </div>
-        <div class="form-group">
-          <label for="repoOwner">Repository Owner</label>
-          <input type="text" id="repoOwner" placeholder="your-username">
-        </div>
-        <button id="saveConfig" class="btn btn-secondary">Save Configuration</button>
-      </div>
-
-      <div class="divider">
-        <span>OR</span>
-      </div>
-
-      <div id="oauthConfig">
+      <div id="authSection">
+        <p class="auth-message">Before we can push code to your selected repository, we need access to your GitHub account.</p>
         <button id="connectGithub" class="btn btn-github">
           <span class="btn-icon">🔗</span>
-          Connect GitHub Account
+          Login with GitHub
         </button>
         <div id="githubStatus" class="github-status"></div>
+      </div>
+
+      <div id="repoSection" style="display: none;">
+        <div class="form-group">
+          <label for="repoSelect">Select Repository</label>
+          <select id="repoSelect" class="repo-select">
+            <option value="">Loading repositories...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="newRepoName">Or create new repository</label>
+          <input type="text" id="newRepoName" placeholder="leetcode-solutions">
+        </div>
+        <button id="selectRepo" class="btn btn-secondary">Select Repository</button>
       </div>
     </div>
 

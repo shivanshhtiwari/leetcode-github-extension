@@ -14,6 +14,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Keep message channel open for async response
   }
+
+  if (request.action === 'fetchRepositories') {
+    fetchRepositories(request.token, request.username)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep message channel open for async response
+  }
+
+  if (request.action === 'createRepository') {
+    createRepository(request.token, request.repoName)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep message channel open for async response
+  }
 });
 
 async function pushToGitHub(solutionData, config) {
@@ -221,6 +235,80 @@ async function exchangeCodeForToken(code) {
 
   } catch (error) {
     console.error('Error exchanging code for token:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+async function fetchRepositories(token, username) {
+  try {
+    const response = await fetch(`https://api.github.com/user/repos?per_page=100&sort=updated`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+    }
+
+    const repositories = await response.json();
+
+    return {
+      success: true,
+      repositories: repositories.map(repo => ({
+        name: repo.name,
+        full_name: repo.full_name,
+        description: repo.description
+      }))
+    };
+
+  } catch (error) {
+    console.error('Error fetching repositories:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+async function createRepository(token, repoName) {
+  try {
+    const response = await fetch('https://api.github.com/user/repos', {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: repoName,
+        description: 'LeetCode solutions',
+        private: false,
+        auto_init: true
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`GitHub API error: ${error.message || response.statusText}`);
+    }
+
+    const repository = await response.json();
+
+    return {
+      success: true,
+      repository: {
+        name: repository.name,
+        full_name: repository.full_name
+      }
+    };
+
+  } catch (error) {
+    console.error('Error creating repository:', error);
     return {
       success: false,
       error: error.message
