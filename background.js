@@ -7,6 +7,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Keep message channel open for async response
   }
+  
+  if (request.action === 'exchangeCodeForToken') {
+    exchangeCodeForToken(request.code)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep message channel open for async response
+  }
 });
 
 async function pushToGitHub(solutionData, config) {
@@ -161,4 +168,62 @@ async function createOrUpdateFile(token, owner, repo, path, content, message, sh
   }
 
   return await response.json();
+}
+
+async function exchangeCodeForToken(code) {
+  try {
+    const clientId = 'YOUR_GITHUB_CLIENT_ID'; // Replace with your actual GitHub OAuth client ID
+    const clientSecret = 'YOUR_GITHUB_CLIENT_SECRET'; // Replace with your actual GitHub OAuth client secret
+    
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: code
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`GitHub OAuth error: ${error.error_description || response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error_description || data.error);
+    }
+
+    // Get user information using the access token
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `token ${data.access_token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!userResponse.ok) {
+      throw new Error('Failed to fetch user information');
+    }
+
+    const userData = await userResponse.json();
+
+    return {
+      success: true,
+      token: data.access_token,
+      username: userData.login
+    };
+
+  } catch (error) {
+    console.error('Error exchanging code for token:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 }

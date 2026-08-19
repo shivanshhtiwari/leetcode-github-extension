@@ -7,13 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveConfigBtn = document.getElementById('saveConfig');
   const pushSolutionBtn = document.getElementById('pushSolution');
   const solutionStatus = document.getElementById('solutionStatus');
+  const connectGithubBtn = document.getElementById('connectGithub');
+  const githubStatus = document.getElementById('githubStatus');
 
   // Load saved configuration
-  chrome.storage.local.get(['githubToken', 'githubUsername', 'repoName', 'repoOwner'], (result) => {
+  chrome.storage.local.get(['githubToken', 'githubUsername', 'repoName', 'repoOwner', 'isOAuthConnected'], (result) => {
     if (result.githubToken) githubTokenInput.value = result.githubToken;
     if (result.githubUsername) githubUsernameInput.value = result.githubUsername;
     if (result.repoName) repoNameInput.value = result.repoName;
     if (result.repoOwner) repoOwnerInput.value = result.repoOwner;
+    
+    // Show OAuth connection status
+    if (result.isOAuthConnected && result.githubUsername) {
+      showGithubStatus(`Connected as @${result.githubUsername}`, 'connected');
+      connectGithubBtn.textContent = '✓ Connected';
+      connectGithubBtn.disabled = true;
+    }
     
     // Enable push button if config is complete
     checkConfigComplete();
@@ -102,4 +111,89 @@ document.addEventListener('DOMContentLoaded', () => {
   [githubTokenInput, githubUsernameInput, repoNameInput, repoOwnerInput].forEach(input => {
     input.addEventListener('input', checkConfigComplete);
   });
+
+  // Connect GitHub via OAuth
+  connectGithubBtn.addEventListener('click', async () => {
+    showGithubStatus('Connecting to GitHub...', 'loading');
+    connectGithubBtn.disabled = true;
+
+    try {
+      // Use Chrome Identity API for OAuth
+      const authUrl = 'https://github.com/login/oauth/authorize';
+      const clientId = 'YOUR_GITHUB_CLIENT_ID'; // Replace with your actual GitHub OAuth client ID
+      const redirectUri = chrome.identity.getRedirectURL();
+      const scopes = ['repo', 'user'];
+      
+      const authUrlWithParams = `${authUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(' ')}`;
+      
+      // Launch OAuth flow
+      chrome.identity.launchWebAuthFlow(
+        {
+          url: authUrlWithParams,
+          interactive: true
+        },
+        async (responseUrl) => {
+          if (chrome.runtime.lastError) {
+            showGithubStatus(`Authentication failed: ${chrome.runtime.lastError.message}`, 'error');
+            connectGithubBtn.disabled = false;
+            return;
+          }
+
+          if (responseUrl) {
+            // Extract the authorization code from the response URL
+            const codeMatch = responseUrl.match(/[?&]code=([^&]+)/);
+            if (codeMatch) {
+              const code = codeMatch[1];
+              
+              // Exchange code for access token via background script
+              chrome.runtime.sendMessage({
+                action: 'exchangeCodeForToken',
+                code: code
+              }, async (response) => {
+                if (response.success) {
+                  const { token, username } = response;
+                  
+                  // Save the token and username
+                  chrome.storage.local.set({
+                    githubToken: token,
+                    githubUsername: username,
+                    repoOwner: username,
+                    isOAuthConnected: true
+                  }, () => {
+                    // Update UI
+                    githubTokenInput.value = token;
+                    githubUsernameInput.value = username;
+                    repoOwnerInput.value = username;
+                    
+                    showGithubStatus(`Connected as @${username}`, 'connected');
+                    connectGithubBtn.textContent = '✓ Connected';
+                    showStatus('GitHub connected successfully!', 'success');
+                    checkConfigComplete();
+                  });
+                } else {
+                  showGithubStatus(`Error: ${response.error}`, 'error');
+                  connectGithubBtn.disabled = false;
+                }
+              });
+            } else {
+              showGithubStatus('Could not extract authorization code', 'error');
+              connectGithubBtn.disabled = false;
+            }
+          } else {
+            showGithubStatus('Authentication cancelled', 'error');
+            connectGithubBtn.disabled = false;
+          }
+        }
+      );
+    } catch (error) {
+      showGithubStatus(`Error: ${error.message}`, 'error');
+      connectGithubBtn.disabled = false;
+    }
+  });
+
+  // Show GitHub status message
+  function showGithubStatus(message, type) {
+    githubStatus.textContent = message;
+    githubStatus.className = `github-status ${type}`;
+  }
 });

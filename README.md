@@ -10,16 +10,34 @@ Push your LeetCode solutions to GitHub in one click. This extension automaticall
 - **Portfolio organization**: Organizes solutions by difficulty (Easy, Medium, Hard)
 - **Multi-language support**: Supports Python, Java, JavaScript, C++, and more
 - **GitHub API integration**: Uses GitHub REST API for seamless file management
+- **OAuth authentication**: Connect your GitHub account with one click (no manual token required)
 
 ## Installation
 
 ### Prerequisites
 
 1. A GitHub account
-2. A GitHub Personal Access Token with `repo` scope permissions
-3. Google Chrome browser
+2. Google Chrome browser
 
-### Create GitHub Personal Access Token
+### Option 1: OAuth Authentication (Recommended)
+
+For OAuth authentication, you need to create a GitHub OAuth App:
+
+1. Go to GitHub Settings → Developer settings → OAuth Apps → New OAuth App
+2. Fill in the application details:
+   - **Application name**: LeetCode to GitHub Extension
+   - **Homepage URL**: `https://leetcode.com`
+   - **Application description**: Chrome extension for pushing LeetCode solutions to GitHub
+   - **Authorization callback URL**: `https://<your-extension-id>.chromiumapp.org/` (replace `<your-extension-id>` with your actual extension ID after installation)
+3. Click "Register application"
+4. Copy the **Client ID** and generate a **Client Secret**
+5. Update the following files with your credentials:
+   - In `popup.js`, replace `YOUR_GITHUB_CLIENT_ID` with your actual Client ID
+   - In `background.js`, replace both `YOUR_GITHUB_CLIENT_ID` and `YOUR_GITHUB_CLIENT_SECRET` with your actual credentials
+
+### Option 2: Manual Token Configuration
+
+If you prefer using a Personal Access Token instead of OAuth:
 
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
 2. Click "Generate new token (classic)"
@@ -44,6 +62,18 @@ Push your LeetCode solutions to GitHub in one click. This extension automaticall
 ## Usage
 
 ### Initial Setup
+
+#### Using OAuth (Recommended)
+
+1. Navigate to any LeetCode problem page (e.g., https://leetcode.com/problems/two-sum/)
+2. Click the extension icon in your browser toolbar
+3. Click "Connect GitHub Account" button
+4. Authorize the extension in the GitHub popup
+5. Once connected, your username and token will be automatically filled
+6. Set your **Repository Name** (e.g., `leetcode-solutions`)
+7. The extension will automatically use your username as the repository owner
+
+#### Using Manual Token
 
 1. Navigate to any LeetCode problem page (e.g., https://leetcode.com/problems/two-sum/)
 2. Click the extension icon in your browser toolbar
@@ -121,10 +151,17 @@ Stats: Runtime: 52 ms, Memory: 13.8 MB
 - Verify your Personal Access Token has the correct permissions
 - Check that your repository name and owner are correct
 - Ensure the repository exists on GitHub
+- For OAuth: Verify your Client ID and Client Secret are correctly set in the source files
+
+### "Authentication failed" (OAuth)
+- Make sure you've replaced `YOUR_GITHUB_CLIENT_ID` and `YOUR_GITHUB_CLIENT_SECRET` in both `popup.js` and `background.js`
+- Check that your OAuth App callback URL matches your extension ID
+- The callback URL format is: `https://<extension-id>.chromiumapp.org/`
+- You can find your extension ID in `chrome://extensions/`
 
 ### Extension not loading
-- Make sure you've converted the SVG icons to PNG format
-- Check that all files are in the correct directory结构
+- Make sure you've converted the SVG icons to PNG format (or use SVG directly)
+- Check that all files are in the correct directory structure
 - Try reloading the extension in chrome://extensions/
 
 ## Security

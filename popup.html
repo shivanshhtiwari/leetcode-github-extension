@@ -15,24 +15,39 @@
 
     <div class="config-section">
       <h2>GitHub Configuration</h2>
-      <div class="form-group">
-        <label for="githubToken">GitHub Personal Access Token</label>
-        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-        <small>Requires repo scope permissions</small>
+      
+      <div id="manualConfig">
+        <div class="form-group">
+          <label for="githubToken">GitHub Personal Access Token</label>
+          <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+          <small>Requires repo scope permissions</small>
+        </div>
+        <div class="form-group">
+          <label for="githubUsername">GitHub Username</label>
+          <input type="text" id="githubUsername" placeholder="your-username">
+        </div>
+        <div class="form-group">
+          <label for="repoName">Repository Name</label>
+          <input type="text" id="repoName" placeholder="leetcode-solutions">
+        </div>
+        <div class="form-group">
+          <label for="repoOwner">Repository Owner</label>
+          <input type="text" id="repoOwner" placeholder="your-username">
+        </div>
+        <button id="saveConfig" class="btn btn-secondary">Save Configuration</button>
       </div>
-      <div class="form-group">
-        <label for="githubUsername">GitHub Username</label>
-        <input type="text" id="githubUsername" placeholder="your-username">
+
+      <div class="divider">
+        <span>OR</span>
       </div>
-      <div class="form-group">
-        <label for="repoName">Repository Name</label>
-        <input type="text" id="repoName" placeholder="leetcode-solutions">
+
+      <div id="oauthConfig">
+        <button id="connectGithub" class="btn btn-github">
+          <span class="btn-icon">🔗</span>
+          Connect GitHub Account
+        </button>
+        <div id="githubStatus" class="github-status"></div>
       </div>
-      <div class="form-group">
-        <label for="repoOwner">Repository Owner</label>
-        <input type="text" id="repoOwner" placeholder="your-username">
-      </div>
-      <button id="saveConfig" class="btn btn-secondary">Save Configuration</button>
     </div>
 
     <div class="action-section">
